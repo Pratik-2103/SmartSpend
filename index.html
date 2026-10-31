@@ -4,7 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smart Spend</title>
-  <link rel="icon" type="image/png" href="icon.png">
+  
+  <!-- NEW ICON CODE - Added -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  <link rel="apple-touch-icon" href="icon-512.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0a0a" />
+
   <link rel="stylesheet" href="style.css" />
   <script src="script.js" defer></script>
 </head>
@@ -16,7 +23,8 @@
         <h1>Smart Spend</h1>
         <p class="subtitle">A clearer view of where your money goes.</p>
       </div>
-      <span class="logo" aria-hidden="true">₹</span>
+      <!-- Changed ₹ logo to your icon -->
+      <img src="icon-192.png" alt="Smart Spend logo" class="logo" style="width:56px; height:56px; border-radius:16px;" />
     </header>
 
     <section class="summary" aria-label="Monthly spending summary">
