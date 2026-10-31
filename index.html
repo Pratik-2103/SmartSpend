@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Spend</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div>
+        <p class="eyebrow">PERSONAL FINANCE</p>
+        <h1>Smart Spend</h1>
+        <p class="subtitle">A clearer view of where your money goes.</p>
+      </div>
+      <span class="logo" aria-hidden="true">₹</span>
+    </header>
+
+    <section class="summary" aria-label="Monthly spending summary">
+      <article class="card budget-card">
+        <p>Monthly budget</p>
+        <strong id="budgetDisplay">₹0.00</strong>
+        <button class="text-button" id="editBudgetButton" type="button">Set budget</button>
+      </article>
+      <article class="card">
+        <p>Total spent</p>
+        <strong id="totalSpent">₹0.00</strong>
+        <span class="muted">This month</span>
+      </article>
+      <article class="card">
+        <p>Remaining</p>
+        <strong id="remaining">₹0.00</strong>
+        <span class="muted">Budget left</span>
+      </article>
+    </section>
+
+    <section class="budget-progress card">
+      <div class="progress-heading">
+        <span>Budget progress</span>
+        <span id="progressLabel">0% used</span>
+      </div>
+      <div class="progress-track" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </section>
+
+    <section class="toolbar card" aria-label="Expense controls">
+      <label>Viewing month <input id="monthPicker" type="month" /></label>
+      <label>Search expenses <input id="searchInput" type="search" placeholder="Search name or category" /></label>
+      <button class="secondary-button" id="exportButton" type="button">Export CSV</button>
+    </section>
+
+    <section class="content-grid">
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">YOUR ACTIVITY</p>
+            <h2>Recent expenses</h2>
+          </div>
+          <button class="clear-button" id="clearButton" type="button">Clear month</button>
+        </div>
+
+        <ul class="expense-list" id="expenseList" aria-live="polite"></ul>
+        <p class="empty-state" id="emptyState">No expenses yet. Add your first one.</p>
+      </section>
+
+      <section class="panel insights-panel">
+        <p class="eyebrow">SPENDING INSIGHTS</p>
+        <h2>By category</h2>
+        <div id="categoryBreakdown" class="category-breakdown"></div>
+        <p id="insightText" class="insight-text">Add expenses to see your spending insights.</p>
+      </section>
+
+      <section class="panel add-panel">
+        <p class="eyebrow">KEEP TRACK</p>
+        <h2>Add an expense</h2>
+        <form id="expenseForm">
+          <label for="expenseName">What did you spend on?</label>
+          <input id="expenseName" name="name" type="text" placeholder="e.g. Weekly groceries" maxlength="60" required />
+
+          <label for="expenseAmount">Amount</label>
+          <div class="amount-input">
+            <span aria-hidden="true">₹</span>
+            <input id="expenseAmount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required />
+          </div>
+
+          <label for="expenseCategory">Category</label>
+          <select id="expenseCategory" name="category">
+            <option>Food</option>
+            <option>Transport</option>
+            <option>Shopping</option>
+            <option>Bills</option>
+            <option>Health</option>
+            <option>Entertainment</option>
+            <option>Other</option>
+          </select>
+
+          <button class="primary-button" type="submit">Add expense <span aria-hidden="true">＋</span></button>
+        </form>
+      </section>
+    </section>
+
+    <footer>Smart Spend · Your spending, made clearer.</footer>
+  </main>
+
+  <dialog id="budgetDialog">
+    <form id="budgetForm" method="dialog">
+      <h2>Set your monthly budget</h2>
+      <label for="budgetInput">Budget amount (₹)</label>
+      <input id="budgetInput" type="number" min="0" step="0.01" placeholder="e.g. 25000" required />
+      <div class="dialog-actions">
+        <button class="secondary-button" value="cancel" type="button" id="cancelBudget">Cancel</button>
+        <button class="primary-button" value="save" type="submit">Save budget</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
