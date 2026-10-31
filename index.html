@@ -3,66 +3,112 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101713" />
   <title>Smart Spend</title>
-  
-  <!-- NEW ICON CODE - Added -->
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
-  <link rel="apple-touch-icon" href="icon-512.png" />
+  <link rel="icon" type="image/png" href="ss.png" sizes="256x256" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0a0a0a" />
-
   <link rel="stylesheet" href="style.css" />
-  <script src="script.js" defer></script>
+  <script src="script.js" type="module"></script>
 </head>
 <body>
-  <main class="app">
-    <header class="header">
-      <div>
-        <p class="eyebrow">PERSONAL FINANCE</p>
-        <h1>Smart Spend</h1>
-        <p class="subtitle">A clearer view of where your money goes.</p>
+  <section class="auth-screen" id="authScreen" aria-labelledby="authHeading">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <img src="ss.png" alt="" width="60" height="60" />
+        <span>SMART SPEND</span>
       </div>
-      <!-- Changed ₹ logo to your icon -->
-      <img src="icon-192.png" alt="Smart Spend logo" class="logo" style="width:56px; height:56px; border-radius:16px;" />
+      <p class="eyebrow">A FRESH START FOR YOUR FINANCES</p>
+      <h1 id="authHeading">Welcome back</h1>
+      <p class="auth-intro" id="authIntro">Sign in to see your spending from any device.</p>
+
+      <form id="authForm">
+        <label for="authEmail">Email address</label>
+        <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required />
+        <label class="consent-row" id="consentRow" hidden>
+          <input id="privacyConsent" type="checkbox" />
+          <span>I agree that my email and expenses will be stored in the cloud so I can use Smart Spend across devices. The site owner can see my registered email; my expenses are private to my account.</span>
+        </label>
+        <button class="primary-button auth-submit" id="authSubmit" type="submit">Sign in</button>
+      </form>
+
+      <p class="setup-notice" id="authSetupNotice" hidden></p>
+      <p class="auth-status" id="authStatus" role="status" aria-live="polite"></p>
+      <p class="auth-switch">
+        <span id="authSwitchPrompt">New to Smart Spend?</span>
+        <button id="authSwitch" type="button">Create an account</button>
+      </p>
+    </div>
+    <p class="auth-footnote">Your money story, made clearer.</p>
+  </section>
+
+  <main class="app" id="appShell" hidden>
+    <header class="header">
+      <div class="brand">
+        <img class="logo" src="ss.png" alt="" width="56" height="56" />
+        <div>
+          <p class="eyebrow">PERSONAL FINANCE</p>
+          <h1>Smart Spend</h1>
+          <p class="subtitle">A clearer view of where your money goes.</p>
+        </div>
+      </div>
+      <div class="account-tools">
+        <span class="account-email" id="accountEmail"></span>
+        <button class="secondary-button refresh-button" id="refreshButton" type="button">↻ Refresh</button>
+        <button class="secondary-button signout-button" id="signOutButton" type="button">Sign out</button>
+      </div>
     </header>
 
     <section class="summary" aria-label="Monthly spending summary">
       <article class="card budget-card">
-        <p>Monthly budget</p>
-        <strong id="budgetDisplay">₹0.00</strong>
-        <button class="text-button" id="editBudgetButton" type="button">Set budget</button>
+        <div class="card-label"><span class="summary-icon">🎯</span><span>Monthly budget</span></div>
+        <strong id="budgetDisplay">₹0</strong>
+        <button class="text-button" id="editBudgetButton" type="button">Set budget <span aria-hidden="true">↗</span></button>
       </article>
       <article class="card">
-        <p>Total spent</p>
-        <strong id="totalSpent">₹0.00</strong>
-        <span class="muted">This month</span>
+        <div class="card-label"><span class="summary-icon">📊</span><span>Total spent</span></div>
+        <strong id="totalSpent">₹0</strong>
+        <span class="muted">For the selected month</span>
       </article>
       <article class="card">
-        <p>Remaining</p>
-        <strong id="remaining">₹0.00</strong>
+        <div class="card-label"><span class="summary-icon">🌱</span><span>Remaining</span></div>
+        <strong id="remaining">₹0</strong>
         <span class="muted">Budget left</span>
       </article>
     </section>
 
-    <section class="budget-progress card">
+    <section class="budget-progress card" aria-label="Budget progress">
       <div class="progress-heading">
         <span>Budget progress</span>
-        <span id="progressLabel">0% used</span>
+        <span id="progressLabel">Set a budget to start</span>
       </div>
-      <div class="progress-track" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-track" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="progress-fill" id="progressFill"></div>
       </div>
     </section>
 
     <section class="toolbar card" aria-label="Expense controls">
       <label>Viewing month <input id="monthPicker" type="month" /></label>
-      <label>Search expenses <input id="searchInput" type="search" placeholder="Search name or category" /></label>
-      <button class="secondary-button" id="exportButton" type="button">Export CSV</button>
+      <label class="search-label">Search expenses <input id="searchInput" type="search" placeholder="Name or category" /></label>
+      <label class="currency-label">Currency
+        <select id="currencySelect">
+          <option value="INR">₹ INR · Indian Rupee</option>
+          <option value="USD">$ USD · US Dollar</option>
+          <option value="EUR">€ EUR · Euro</option>
+          <option value="GBP">£ GBP · Pound Sterling</option>
+          <option value="CAD">C$ CAD · Canadian Dollar</option>
+          <option value="AUD">A$ AUD · Australian Dollar</option>
+          <option value="JPY">¥ JPY · Japanese Yen</option>
+        </select>
+      </label>
+      <button class="secondary-button export-button" id="exportButton" type="button">↓ Export CSV</button>
+      <p class="currency-note" id="currencyNote">Choose the currency for this account. It locks after your first expense to keep totals accurate.</p>
     </section>
 
     <section class="content-grid">
-      <section class="panel">
+      <section class="panel expenses-panel">
         <div class="section-heading">
           <div>
             <p class="eyebrow">YOUR ACTIVITY</p>
@@ -70,16 +116,8 @@
           </div>
           <button class="clear-button" id="clearButton" type="button">Clear month</button>
         </div>
-
         <ul class="expense-list" id="expenseList" aria-live="polite"></ul>
-        <p class="empty-state" id="emptyState">No expenses yet. Add your first one.</p>
-      </section>
-
-      <section class="panel insights-panel">
-        <p class="eyebrow">SPENDING INSIGHTS</p>
-        <h2>By category</h2>
-        <div id="categoryBreakdown" class="category-breakdown"></div>
-        <p id="insightText" class="insight-text">Add expenses to see your spending insights.</p>
+        <p class="empty-state" id="emptyState">No expenses this month. Add your first one.</p>
       </section>
 
       <section class="panel add-panel">
@@ -91,33 +129,86 @@
 
           <label for="expenseAmount">Amount</label>
           <div class="amount-input">
-            <span aria-hidden="true">₹</span>
+            <span id="amountCurrency" aria-hidden="true">₹</span>
             <input id="expenseAmount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required />
           </div>
 
           <label for="expenseCategory">Category</label>
           <select id="expenseCategory" name="category">
-            <option>Food</option>
-            <option>Transport</option>
-            <option>Shopping</option>
-            <option>Bills</option>
-            <option>Health</option>
-            <option>Entertainment</option>
-            <option>Other</option>
+            <option value="Food">🍽️ Food</option>
+            <option value="Transport">🚗 Transport</option>
+            <option value="Shopping">🛍️ Shopping</option>
+            <option value="Bills">🧾 Bills</option>
+            <option value="Health">💊 Health</option>
+            <option value="Education">📚 Education</option>
+            <option value="Travel">✈️ Travel</option>
+            <option value="Housing">🏠 Housing</option>
+            <option value="Personal care">🧴 Personal care</option>
+            <option value="Subscriptions">🔁 Subscriptions</option>
+            <option value="Entertainment">🎬 Entertainment</option>
+            <option value="Gifts">🎁 Gifts</option>
+            <option value="Other">💳 Other</option>
           </select>
 
-          <button class="primary-button" type="submit">Add expense <span aria-hidden="true">＋</span></button>
+          <button class="primary-button add-expense-button" type="submit">Add expense <span aria-hidden="true">＋</span></button>
         </form>
+      </section>
+
+      <section class="panel chart-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">THE BIG PICTURE</p>
+            <h2>Six-month spending trend</h2>
+          </div>
+          <span class="chart-badge">Monthly</span>
+        </div>
+        <svg class="spending-chart" id="spendingChart" viewBox="0 0 640 260" role="img" aria-label="Monthly expense totals for the last six months"></svg>
+        <p class="chart-summary" id="chartSummary"></p>
+      </section>
+
+      <section class="panel insights-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">SPENDING INSIGHTS</p>
+            <h2>By category</h2>
+          </div>
+          <span class="chart-badge">This month</span>
+        </div>
+        <div id="categoryBreakdown" class="category-breakdown"></div>
+        <p id="insightText" class="insight-text">Add an expense to see your category breakdown.</p>
+      </section>
+
+      <section class="panel tip-panel">
+        <div class="tip-icon" aria-hidden="true">💡</div>
+        <div>
+          <p class="eyebrow">A SMALL SMART TIP</p>
+          <h2>Make your money work for you</h2>
+          <p id="smartTip" class="tip-copy">Add a few expenses to get a useful monthly tip.</p>
+        </div>
+      </section>
+
+      <section class="panel owner-panel" id="ownerPanel" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">OWNER VIEW</p>
+            <h2>Registered members</h2>
+          </div>
+          <span class="chart-badge" id="memberCount">0 members</span>
+        </div>
+        <p class="owner-message" id="ownerMessage">Only registered email and join date appear here.</p>
+        <ul class="member-list" id="memberList"></ul>
       </section>
     </section>
 
+    <div class="sync-status" id="syncStatus" role="status" aria-live="polite">Connected to your account</div>
     <footer>Smart Spend · Your spending, made clearer.</footer>
   </main>
 
   <dialog id="budgetDialog">
     <form id="budgetForm" method="dialog">
+      <p class="eyebrow">YOUR MONTHLY PLAN</p>
       <h2>Set your monthly budget</h2>
-      <label for="budgetInput">Budget amount (₹)</label>
+      <label for="budgetInput">Budget amount <span id="budgetCurrencyText">(₹)</span></label>
       <input id="budgetInput" type="number" min="0" step="0.01" placeholder="e.g. 25000" required />
       <div class="dialog-actions">
         <button class="secondary-button" value="cancel" type="button" id="cancelBudget">Cancel</button>
