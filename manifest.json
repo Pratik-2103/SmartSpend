@@ -3,12 +3,12 @@
   "short_name": "Smart Spend",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "ss.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "ss.png",
       "sizes": "512x512",
       "type": "image/png"
     }
