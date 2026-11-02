@@ -219,17 +219,17 @@ function render() {
   const visible = visibleExpenses();
   const total = allMonth.reduce((sum, expense) => sum + expense.amount, 0);
   const incomeTotal = incomeEntries.reduce((sum, entry) => sum + entry.amount, 0);
-  const spendable = data.budget + incomeTotal;
-  const remaining = spendable - total;
-  const percent = spendable > 0 ? total / spendable * 100 : 0;
+  const monthlyBudget = data.budget + incomeTotal;
+  const remaining = monthlyBudget - total;
+  const percent = monthlyBudget > 0 ? total / monthlyBudget * 100 : 0;
 
-  $("#budgetDisplay").textContent = money(data.budget);
+  $("#budgetDisplay").textContent = money(monthlyBudget);
   $("#totalIncome").textContent = money(incomeTotal);
   $("#totalSpent").textContent = money(total);
   $("#availableFunds").textContent = money(remaining);
   $("#availableFunds").style.color = remaining < 0 ? "#ff806d" : "";
-  $("#progressLabel").textContent = spendable
-    ? Math.round(percent) + "% of budget + received used"
+  $("#progressLabel").textContent = monthlyBudget
+    ? Math.round(percent) + "% of monthly budget used"
     : "Set a budget or record money received";
   $("#progressFill").style.width = Math.min(percent, 100) + "%";
   $("#progressFill").classList.toggle("over-budget", percent > 100);
@@ -246,7 +246,7 @@ function render() {
   renderExpenses(visible, monthEntries.length);
   renderInsights(allMonth, total);
   renderChart();
-  renderTip(allMonth, total, remaining, spendable);
+  renderTip(allMonth, total, remaining, monthlyBudget);
 }
 
 function renderExpenses(expenses, totalCount) {

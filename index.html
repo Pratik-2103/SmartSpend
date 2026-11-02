@@ -83,7 +83,8 @@
       <article class="card budget-card">
         <div class="card-label"><span class="summary-icon">🎯</span><span>Monthly budget</span></div>
         <strong id="budgetDisplay">₹0</strong>
-        <button class="text-button" id="editBudgetButton" type="button">Set budget <span aria-hidden="true">↗</span></button>
+        <span class="muted">Starting budget + received</span>
+        <button class="text-button" id="editBudgetButton" type="button">Set starting budget <span aria-hidden="true">↗</span></button>
       </article>
       <article class="card income-card">
         <div class="card-label"><span class="summary-icon">💸</span><span>Money received</span></div>
@@ -182,7 +183,7 @@
             </select>
           </div>
 
-          <p class="income-hint" id="incomeHint" hidden>Record money someone sent you, a refund, or other income. It adds to the amount available this month.</p>
+          <p class="income-hint" id="incomeHint" hidden>Record money someone sent you, a refund, or other income. It is added to this month’s budget and increases the amount available.</p>
 
           <button class="primary-button add-expense-button" id="addEntryButton" type="submit">Add expense <span aria-hidden="true">＋</span></button>
         </form>
@@ -241,12 +242,12 @@
   <dialog id="budgetDialog">
     <form id="budgetForm" method="dialog">
       <p class="eyebrow">YOUR MONTHLY PLAN</p>
-      <h2>Set your monthly budget</h2>
-      <label for="budgetInput">Budget amount <span id="budgetCurrencyText">(₹)</span></label>
+      <h2>Set your starting budget</h2>
+      <label for="budgetInput">Starting amount <span id="budgetCurrencyText">(₹)</span></label>
       <input id="budgetInput" type="number" min="0" step="0.01" placeholder="e.g. 25000" required />
       <div class="dialog-actions">
         <button class="secondary-button" value="cancel" type="button" id="cancelBudget">Cancel</button>
-        <button class="primary-button" value="save" type="submit">Save budget</button>
+        <button class="primary-button" value="save" type="submit">Save starting budget</button>
       </div>
     </form>
   </dialog>
