@@ -1,4 +1,4 @@
-import { SUPABASE_URL, SUPABASE_ANON_KEY, OWNER_EMAIL } from "./config.js";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
 
 const $ = (selector) => document.querySelector(selector);
 const LEGACY_STORAGE_KEY = "smartSpendData";
@@ -609,26 +609,15 @@ async function requireAccountAccess(user) {
 
 async function loadOwnerList() {
   const panel = $("#ownerPanel");
-  const ownerEmail = String(OWNER_EMAIL || "").toLowerCase();
-  if (!currentUser || String(currentUser.email || "").toLowerCase() !== ownerEmail) {
-    panel.hidden = true;
-    return;
-  }
+  panel.hidden = true;
+  if (!currentUser) return;
+
+  const adminCheck = await supabase.rpc("is_smart_spend_admin");
+  if (adminCheck.error || adminCheck.data !== true) return;
 
   panel.hidden = false;
   $("#ownerMessage").textContent = "Checking owner access…";
   $("#memberList").replaceChildren();
-
-  const adminCheck = await supabase.rpc("is_smart_spend_admin");
-  if (adminCheck.error) {
-    $("#ownerMessage").textContent = "Finish the owner setup by running owner-admin.sql in Supabase SQL Editor.";
-    $("#memberCount").textContent = "Setup needed";
-    return;
-  }
-  if (adminCheck.data !== true) {
-    panel.hidden = true;
-    return;
-  }
 
   const { data: profiles, error } = await supabase.rpc("admin_list_smart_spend_members");
 
