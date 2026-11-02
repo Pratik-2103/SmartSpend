@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Smart Spend Royal Rupee</title>
+  <desc id="desc">A polished gold rupee medallion crowned with royal details on a deep midnight-purple field.</desc>
+  <defs>
+    <linearGradient id="backdrop" x1="90" y1="60" x2="920" y2="980" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#30205e"/>
+      <stop offset=".48" stop-color="#11142f"/>
+      <stop offset="1" stop-color="#070a19"/>
+    </linearGradient>
+    <radialGradient id="aura" cx="0" cy="0" r="1" gradientTransform="matrix(0 530 -530 0 512 450)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8b58ff" stop-opacity=".34"/>
+      <stop offset="1" stop-color="#5d37b9" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="246" y1="160" x2="798" y2="836" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff4b0"/>
+      <stop offset=".16" stop-color="#e8b847"/>
+      <stop offset=".33" stop-color="#fff1a0"/>
+      <stop offset=".52" stop-color="#bf791c"/>
+      <stop offset=".72" stop-color="#ffe28a"/>
+      <stop offset=".9" stop-color="#b76a17"/>
+      <stop offset="1" stop-color="#fff1a3"/>
+    </linearGradient>
+    <linearGradient id="goldBright" x1="350" y1="256" x2="676" y2="746" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffbd1"/>
+      <stop offset=".3" stop-color="#f8db76"/>
+      <stop offset=".58" stop-color="#d89527"/>
+      <stop offset=".82" stop-color="#ffed9f"/>
+      <stop offset="1" stop-color="#aa6819"/>
+    </linearGradient>
+    <linearGradient id="purpleGem" x1="470" y1="175" x2="552" y2="290" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffb5ff"/>
+      <stop offset=".3" stop-color="#c455ff"/>
+      <stop offset="1" stop-color="#4b16a7"/>
+    </linearGradient>
+    <linearGradient id="ruby" x1="362" y1="282" x2="418" y2="350" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff0a5"/>
+      <stop offset=".45" stop-color="#ff6e91"/>
+      <stop offset="1" stop-color="#9d1744"/>
+    </linearGradient>
+    <radialGradient id="enamel" cx="0" cy="0" r="1" gradientTransform="matrix(0 178 -178 0 466 450)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#55317f"/>
+      <stop offset=".58" stop-color="#281343"/>
+      <stop offset="1" stop-color="#110d29"/>
+    </radialGradient>
+    <filter id="shadow" x="80" y="72" width="864" height="920" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="softGlow" x="210" y="180" width="604" height="710" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+    <pattern id="engraving" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <path d="M0 4h34M0 17h34M0 30h34" stroke="#fff1ac" stroke-opacity=".08" stroke-width="2"/>
+    </pattern>
+    <clipPath id="coinClip"><circle cx="512" cy="565" r="294"/></clipPath>
+  </defs>
+
+  <!-- Deep jewel-toned app tile -->
+  <rect width="1024" height="1024" rx="224" fill="url(#backdrop)"/>
+  <rect width="1024" height="1024" rx="224" fill="url(#aura)"/>
+  <path d="M55 512c116-250 300-374 457-374s341 124 457 374c-116 250-300 374-457 374S171 762 55 512Z" fill="none" stroke="#dcb85c" stroke-opacity=".12" stroke-width="3"/>
+  <path d="M90 512c107-216 267-323 422-323s315 107 422 323c-107 216-267 323-422 323S197 728 90 512Z" fill="none" stroke="#b59aff" stroke-opacity=".16" stroke-width="2"/>
+
+  <!-- Low halo behind the medallion -->
+  <circle cx="512" cy="576" r="318" fill="#c899ff" opacity=".45" filter="url(#softGlow)"/>
+
+  <!-- Royal crown silhouette -->
+  <path d="m366 294-65-118 105 66 106-125 106 125 105-66-65 118-49 57H415l-49-57Z" fill="#6b3a0b" opacity=".7" transform="translate(0 12)"/>
+  <path d="m366 286-65-118 105 66 106-125 106 125 105-66-65 118-49 57H415l-49-57Z" fill="url(#gold)" stroke="#fff0a1" stroke-width="9" stroke-linejoin="round"/>
+  <path d="m357 183 55 36 100-112 100 112 55-36-45 82H402l-45-82Z" fill="url(#goldBright)" stroke="#9d5e17" stroke-width="7" stroke-linejoin="round"/>
+  <path d="m412 219 100-112 100 112-100-45-100 45Z" fill="#fff4bd" fill-opacity=".52"/>
+  <path d="M401 284h222l35 43H366l35-43Z" fill="url(#gold)" stroke="#8f5715" stroke-width="8"/>
+  <path d="M384 328h256v28H384z" rx="12" fill="#a96816" stroke="#ffed9b" stroke-width="7"/>
+  <path d="M395 333h234" stroke="#fff8d3" stroke-opacity=".72" stroke-width="5" stroke-linecap="round"/>
+  <path d="M392 190 410 220m206-30-18 30M512 127v68" stroke="#fffbd8" stroke-opacity=".8" stroke-width="7" stroke-linecap="round"/>
+  <path d="M467 221h90l-45 61-45-61Z" fill="url(#purpleGem)" stroke="#fff1b4" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M385 272 414 248l20 28-19 21-30-25Zm254 0-29-24-20 28 19 21 30-25Z" fill="url(#ruby)" stroke="#ffe9a0" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="512" cy="113" r="13" fill="#fff7c7" stroke="#c38320" stroke-width="6"/>
+  <circle cx="301" cy="168" r="11" fill="#fff4bc" stroke="#be7d20" stroke-width="5"/>
+  <circle cx="723" cy="168" r="11" fill="#fff4bc" stroke="#be7d20" stroke-width="5"/>
+
+  <!-- Medallion cast shadow -->
+  <circle cx="512" cy="600" r="309" fill="#000" opacity=".58" filter="url(#shadow)"/>
+
+  <!-- Coin, beveled rim, and engraved face -->
+  <circle cx="512" cy="565" r="300" fill="#6d3d0e" stroke="#ffefaa" stroke-width="9"/>
+  <circle cx="512" cy="565" r="284" fill="url(#gold)" stroke="#9b6019" stroke-width="12"/>
+  <circle cx="512" cy="565" r="266" fill="#55300f" stroke="#fff2aa" stroke-width="6"/>
+  <circle cx="512" cy="565" r="252" fill="url(#goldBright)" stroke="#8e5515" stroke-width="8"/>
+  <g clip-path="url(#coinClip)" opacity=".55">
+    <rect x="218" y="270" width="588" height="590" fill="url(#engraving)"/>
+    <circle cx="512" cy="565" r="220" fill="none" stroke="#fff6c7" stroke-opacity=".35" stroke-width="3"/>
+    <circle cx="512" cy="565" r="205" fill="none" stroke="#824c10" stroke-opacity=".3" stroke-width="4" stroke-dasharray="3 16"/>
+  </g>
+  <circle cx="512" cy="565" r="220" fill="none" stroke="#fff6cb" stroke-opacity=".62" stroke-width="7"/>
+  <circle cx="512" cy="565" r="208" fill="none" stroke="#8c5618" stroke-opacity=".55" stroke-width="4" stroke-dasharray="2 19"/>
+  <circle cx="512" cy="565" r="166" fill="#754510" stroke="#fff1a8" stroke-width="9"/>
+  <circle cx="512" cy="565" r="151" fill="url(#enamel)" stroke="#b97820" stroke-width="6"/>
+  <circle cx="512" cy="565" r="137" fill="none" stroke="#f8dd83" stroke-opacity=".42" stroke-width="3"/>
+
+  <!-- Crisp, unmistakable rupee mark with a raised dark bevel -->
+  <text x="512" y="688" text-anchor="middle" font-family="Noto Sans, Segoe UI Symbol, Arial, sans-serif" font-size="356" font-weight="900" fill="#75400c" stroke="#75400c" stroke-width="19" stroke-linejoin="round" transform="translate(0 12)">₹</text>
+  <text x="512" y="688" text-anchor="middle" font-family="Noto Sans, Segoe UI Symbol, Arial, sans-serif" font-size="356" font-weight="900" fill="url(#goldBright)" stroke="#fff4b9" stroke-width="8" stroke-linejoin="round">₹</text>
+  <path d="M383 438c45-32 91-45 142-42" fill="none" stroke="#fffde2" stroke-opacity=".7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M287 454c22-18 46-29 73-35M737 695c-18 19-39 32-64 40" fill="none" stroke="#fff8cf" stroke-opacity=".72" stroke-width="6" stroke-linecap="round"/>
+  <path d="m762 363 11 25 27 4-20 18 5 27-23-13-24 13 5-27-20-18 27-4 12-25Zm-483 300 8 18 20 3-14 14 3 19-17-9-18 9 4-19-15-14 20-3 9-18Z" fill="#fff3b0" stroke="#a7681a" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- Outer sparkle accents -->
+  <path d="m834 485 13 30 32 5-24 22 6 33-27-16-28 16 6-33-24-22 33-5 13-30Zm-643 33 9 20 22 3-16 15 4 23-19-11-19 11 4-23-16-15 22-3 9-20Z" fill="url(#goldBright)" stroke="#fff2b0" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="820" cy="663" r="9" fill="#fff7cf"/>
+  <circle cx="211" cy="386" r="8" fill="#fff7cf"/>
+  <circle cx="729" cy="790" r="7" fill="#d7baff"/>
+  <circle cx="302" cy="790" r="7" fill="#d7baff"/>
+
+  <!-- Inner app-tile edge catches -->
+  <rect x="22" y="22" width="980" height="980" rx="207" fill="none" stroke="#fff3bd" stroke-opacity=".22" stroke-width="4"/>
+  <path d="M252 68c72-28 154-42 260-42" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="7" stroke-linecap="round"/>
+</svg>
