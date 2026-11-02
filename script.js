@@ -24,6 +24,8 @@ const CATEGORY_ICONS = {
   Subscriptions: "🔁",
   Entertainment: "🎬",
   Gifts: "🎁",
+  Investment: "📈",
+  Income: "💸",
   Other: "💳"
 };
 const VALID_CURRENCIES = Object.keys(CURRENCY_LOCALES);
@@ -32,8 +34,12 @@ let supabase = null;
 let clientLoadError = "";
 let currentUser = null;
 let activeUserId = null;
+let activationInProgressFor = null;
 let data = defaultData();
 let syncBusy = false;
+let recoveryModeRequested = false;
+const PASSWORD_RECOVERY_LINK = new URLSearchParams(window.location.hash.slice(1)).get("type") === "recovery"
+  || new URLSearchParams(window.location.search).get("type") === "recovery";
 
 const configured = SUPABASE_URL.startsWith("https://")
   && !SUPABASE_URL.includes("YOUR_")
@@ -69,7 +75,10 @@ function normalizeData(input) {
       id: String(expense.id || createId()),
       name: String(expense.name || "Expense").slice(0, 60),
       amount,
-      category: CATEGORY_ICONS[expense.category] ? expense.category : "Other",
+      type: expense.type === "income" || expense.category === "Income" ? "income" : "expense",
+      category: expense.type === "income" || expense.category === "Income"
+        ? "Income"
+        : CATEGORY_ICONS[expense.category] ? expense.category : "Other",
       dateISO: String(expense.spent_on || expense.dateISO || localDateISO())
     };
   }).filter(Boolean) : [];
@@ -78,6 +87,10 @@ function normalizeData(input) {
     currency,
     expenses
   };
+}
+
+function isIncome(entry) {
+  return entry.type === "income" || entry.category === "Income";
 }
 
 function createId() {
@@ -169,7 +182,7 @@ function money(value) {
 }
 
 function monthDate(month) {
-  const match = /^(d{4})-(d{2})$/.exec(month || "");
+  const match = /^(\d{4})-(\d{2})$/.exec(month || "");
   return match ? new Date(Number(match[1]), Number(match[2]) - 1, 1) : new Date();
 }
 
@@ -193,26 +206,31 @@ function visibleExpenses() {
 }
 
 function formatExpenseDate(dateISO) {
-  const match = /^(d{4})-(d{2})-(d{2})$/.exec(dateISO || "");
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateISO || "");
   if (!match) return "Date unavailable";
   return new Intl.DateTimeFormat("en", { day: "numeric", month: "short", year: "numeric" })
     .format(new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
 }
 
 function render() {
-  const allMonth = monthExpenses();
+  const monthEntries = monthExpenses();
+  const incomeEntries = monthEntries.filter(isIncome);
+  const allMonth = monthEntries.filter((entry) => !isIncome(entry));
   const visible = visibleExpenses();
   const total = allMonth.reduce((sum, expense) => sum + expense.amount, 0);
-  const remaining = data.budget - total;
-  const percent = data.budget > 0 ? total / data.budget * 100 : 0;
+  const incomeTotal = incomeEntries.reduce((sum, entry) => sum + entry.amount, 0);
+  const spendable = data.budget + incomeTotal;
+  const remaining = spendable - total;
+  const percent = spendable > 0 ? total / spendable * 100 : 0;
 
   $("#budgetDisplay").textContent = money(data.budget);
+  $("#totalIncome").textContent = money(incomeTotal);
   $("#totalSpent").textContent = money(total);
-  $("#remaining").textContent = money(remaining);
-  $("#remaining").style.color = remaining < 0 ? "#ff806d" : "";
-  $("#progressLabel").textContent = data.budget
-    ? Math.round(percent) + "% used"
-    : "Set a budget to start";
+  $("#availableFunds").textContent = money(remaining);
+  $("#availableFunds").style.color = remaining < 0 ? "#ff806d" : "";
+  $("#progressLabel").textContent = spendable
+    ? Math.round(percent) + "% of budget + received used"
+    : "Set a budget or record money received";
   $("#progressFill").style.width = Math.min(percent, 100) + "%";
   $("#progressFill").classList.toggle("over-budget", percent > 100);
   $(".progress-track").setAttribute("aria-valuenow", String(Math.round(Math.min(percent, 100))));
@@ -220,15 +238,15 @@ function render() {
   $("#currencySelect").value = data.currency;
   $("#currencySelect").disabled = data.expenses.length > 0 || data.budget > 0;
   $("#currencyNote").textContent = data.expenses.length || data.budget > 0
-    ? "Currency is locked after setting a budget or adding an expense so amounts are not relabeled."
-    : "Choose the currency for this account before setting a budget or adding an expense.";
+    ? "Currency is locked after setting a budget or adding an entry so amounts are not relabeled."
+    : "Choose the currency for this account before setting a budget or adding an entry.";
   $("#amountCurrency").textContent = CURRENCY_SYMBOLS[data.currency];
   $("#budgetCurrencyText").textContent = "(" + CURRENCY_SYMBOLS[data.currency] + ")";
 
-  renderExpenses(visible, allMonth.length);
+  renderExpenses(visible, monthEntries.length);
   renderInsights(allMonth, total);
   renderChart();
-  renderTip(allMonth, total, remaining);
+  renderTip(allMonth, total, remaining, spendable);
 }
 
 function renderExpenses(expenses, totalCount) {
@@ -236,12 +254,13 @@ function renderExpenses(expenses, totalCount) {
   list.replaceChildren();
   $("#emptyState").hidden = expenses.length > 0;
   $("#emptyState").textContent = totalCount
-    ? "No expenses match your search."
-    : "No expenses this month. Add your first one.";
+    ? "No activity matches your search."
+    : "No activity this month. Add your first entry.";
 
   [...expenses]
     .sort((a, b) => b.dateISO.localeCompare(a.dateISO))
     .forEach((expense) => {
+      const income = isIncome(expense);
       const item = document.createElement("li");
       item.className = "expense-item";
 
@@ -255,12 +274,13 @@ function renderExpenses(expenses, totalCount) {
       const name = document.createElement("strong");
       name.textContent = expense.name;
       const details = document.createElement("span");
-      details.textContent = expense.category + " · " + formatExpenseDate(expense.dateISO);
+      details.textContent = (income ? "Money received" : expense.category) + " · " + formatExpenseDate(expense.dateISO);
       info.append(name, details);
 
       const amount = document.createElement("span");
       amount.className = "expense-amount";
-      amount.textContent = "−" + money(expense.amount);
+      amount.textContent = (income ? "+" : "−") + money(expense.amount);
+      if (income) amount.classList.add("income-amount");
 
       const remove = document.createElement("button");
       remove.className = "delete-button";
@@ -345,7 +365,7 @@ function renderChart() {
     const date = new Date(selected.getFullYear(), selected.getMonth() - offset, 1);
     const key = date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0");
     const total = data.expenses
-      .filter((expense) => expense.dateISO.startsWith(key))
+      .filter((expense) => !isIncome(expense) && expense.dateISO.startsWith(key))
       .reduce((sum, expense) => sum + expense.amount, 0);
     buckets.push({
       key,
@@ -426,18 +446,18 @@ function renderChart() {
     : "Add expenses to start your spending trend.";
 }
 
-function renderTip(expenses, total, remaining) {
+function renderTip(expenses, total, remaining, spendable) {
   const tip = $("#smartTip");
   if (!expenses.length) {
     tip.textContent = "Track small and recurring costs too. They often add up faster than expected.";
-  } else if (!data.budget) {
-    tip.textContent = "Set a monthly budget to see what remains after your spending.";
+  } else if (!spendable) {
+    tip.textContent = "Set a monthly budget or record money received to see what remains after spending.";
   } else if (remaining < 0) {
-    tip.textContent = "You are " + money(Math.abs(remaining)) + " over this month's budget. Review your categories to spot a place to adjust.";
-  } else if (total / data.budget >= 0.8) {
-    tip.textContent = "You have used " + Math.round(total / data.budget * 100) + "% of your budget. Check the category chart before your next large purchase.";
+    tip.textContent = "You are " + money(Math.abs(remaining)) + " over this month's available funds. Review your categories to spot a place to adjust.";
+  } else if (total / spendable >= 0.8) {
+    tip.textContent = "You have used " + Math.round(total / spendable * 100) + "% of your available funds. Check the category chart before your next large purchase.";
   } else {
-    tip.textContent = "You have " + money(remaining) + " left in your budget. Keep logging expenses to make the month-end total useful.";
+    tip.textContent = "You have " + money(remaining) + " available this month. Keep logging activity to make the month-end total useful.";
   }
 }
 
@@ -486,6 +506,7 @@ async function maybeImportLegacyData(userId, cloudData) {
 
 async function loadAccountData() {
   if (!supabase || !currentUser) return;
+  if (!await requireAccountAccess(currentUser)) return;
   const userId = currentUser.id;
   setSyncStatus("Loading your cloud data…", "pending");
 
@@ -534,16 +555,24 @@ async function loadAccountData() {
 async function activateUser(user) {
   if (!supabase || !user) return;
   if (activeUserId === user.id && !$("#appShell").hidden) return;
+  if (activationInProgressFor === user.id) return;
+  activationInProgressFor = user.id;
+  try {
+    if (!await requireAccountAccess(user)) return;
+    if (activeUserId === user.id && !$("#appShell").hidden) return;
 
-  activeUserId = user.id;
-  currentUser = user;
-  data = readCache(user.id);
-  $("#accountEmail").textContent = user.email || "";
-  $("#authScreen").hidden = true;
-  $("#appShell").hidden = false;
-  $("#monthPicker").value = currentMonthISO();
-  render();
-  await loadAccountData();
+    activeUserId = user.id;
+    currentUser = user;
+    data = readCache(user.id);
+    $("#accountEmail").textContent = user.email || "";
+    $("#authScreen").hidden = true;
+    $("#appShell").hidden = false;
+    $("#monthPicker").value = currentMonthISO();
+    render();
+    await loadAccountData();
+  } finally {
+    if (activationInProgressFor === user.id) activationInProgressFor = null;
+  }
 }
 
 function resetSession() {
@@ -553,8 +582,29 @@ function resetSession() {
   $("#appShell").hidden = true;
   $("#authScreen").hidden = false;
   $("#ownerPanel").hidden = true;
+  $("#authForm").hidden = false;
+  $("#passwordResetForm").hidden = true;
+  $("#authSwitch").hidden = false;
+  $("#authSwitchRow").hidden = false;
+  $("#authForm").dataset.mode = "signin";
   $("#authPassword").value = "";
+  $("#newPassword").value = "";
+  $("#confirmNewPassword").value = "";
+  updateAuthMode();
   setAuthStatus("");
+}
+
+async function requireAccountAccess(user) {
+  const { data: allowed, error } = await supabase.rpc("is_smart_spend_user_allowed");
+  if (!error && allowed === true) return true;
+
+  const message = error
+    ? "We couldn't verify this account's access. Please reload when connected and try again."
+    : "This email no longer has access to Smart Spend. Contact the app owner if you think this is a mistake.";
+  if (currentUser?.id === user.id) resetSession();
+  await supabase.auth.signOut();
+  setAuthStatus(message, "error");
+  return false;
 }
 
 async function loadOwnerList() {
@@ -580,27 +630,61 @@ async function loadOwnerList() {
     return;
   }
 
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("email,created_at")
-    .order("created_at", { ascending: false });
+  const { data: profiles, error } = await supabase.rpc("admin_list_smart_spend_members");
 
   if (error) {
-    $("#ownerMessage").textContent = "The member list could not be loaded. Check the profile-table policy.";
+    $("#ownerMessage").textContent = "Run the Smart Spend access-management SQL update in Supabase to enable member controls.";
     $("#memberCount").textContent = "Unavailable";
     return;
   }
 
   $("#memberCount").textContent = (profiles.length || 0) + (profiles.length === 1 ? " member" : " members");
-  $("#ownerMessage").textContent = "Email addresses and join dates only. Expense records remain private to each account.";
+  $("#ownerMessage").textContent = "Block an email to stop its access and future registration. Its saved expenses remain private and are retained.";
   profiles.forEach((profile) => {
     const item = document.createElement("li");
     item.className = "member-row";
+    const details = document.createElement("div");
+    details.className = "member-details";
     const email = document.createElement("span");
     email.textContent = profile.email;
     const joined = document.createElement("span");
     joined.textContent = new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(profile.created_at));
-    item.append(email, joined);
+    details.append(email, joined);
+    const actions = document.createElement("div");
+    actions.className = "member-actions";
+    const status = document.createElement("span");
+    status.className = "member-status";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "block-member-button";
+    button.disabled = Boolean(profile.is_blocked) || profile.user_id === currentUser.id;
+    if (profile.is_blocked) {
+      status.textContent = "Blocked";
+      button.textContent = "Blocked";
+    } else if (profile.user_id === currentUser.id) {
+      status.textContent = "Owner";
+      button.textContent = "Owner";
+    } else {
+      status.textContent = "Active";
+      button.textContent = "Block access";
+      button.addEventListener("click", async () => {
+        if (!window.confirm("Block " + profile.email + " from Smart Spend? They will lose cloud access and cannot register again with this email. Their saved entries will be retained.")) return;
+        button.disabled = true;
+        button.textContent = "Blocking…";
+        const { error: blockError } = await supabase.rpc("admin_block_smart_spend_user", {
+          target_user_id: profile.user_id
+        });
+        if (blockError) {
+          button.disabled = false;
+          button.textContent = "Block access";
+          $("#ownerMessage").textContent = "Could not block this email. Please try again.";
+          return;
+        }
+        await loadOwnerList();
+      });
+    }
+    actions.append(status, button);
+    item.append(details, actions);
     $("#memberList").append(item);
   });
 }
@@ -699,6 +783,9 @@ function updateSettings() {
 
 function updateAuthMode() {
   const isSignup = $("#authForm").dataset.mode === "signup";
+  $("#authForm").hidden = false;
+  $("#passwordResetForm").hidden = true;
+  $("#authSwitch").hidden = false;
   $("#authHeading").textContent = isSignup ? "Create your account" : "Welcome back";
   $("#authIntro").textContent = isSignup
     ? "Register once to keep your expenses with you on every device."
@@ -709,7 +796,34 @@ function updateAuthMode() {
   $("#authPassword").autocomplete = isSignup ? "new-password" : "current-password";
   $("#consentRow").hidden = !isSignup;
   $("#privacyConsent").required = isSignup;
+  $("#forgotPasswordButton").hidden = isSignup;
   setAuthStatus("");
+}
+
+function showPasswordRecovery() {
+  recoveryModeRequested = true;
+  $("#appShell").hidden = true;
+  $("#authScreen").hidden = false;
+  $("#authForm").hidden = true;
+  $("#passwordResetForm").hidden = false;
+  $("#authSwitch").hidden = true;
+  $("#authSwitchRow").hidden = true;
+  $("#authHeading").textContent = "Choose a new password";
+  $("#authIntro").textContent = "Set a new password for your Smart Spend account.";
+  $("#newPassword").focus();
+}
+
+function updateEntryFormMode() {
+  const isIncome = $("#entryType").value === "income";
+  $("#entryHeading").textContent = isIncome ? "Record money received" : "Add an expense";
+  $("#entryNameLabel").textContent = isIncome ? "Who sent you money?" : "What did you spend on?";
+  $("#expenseName").placeholder = isIncome ? "e.g. Salary, gift from Priya" : "e.g. Weekly groceries";
+  $("#expenseCategoryGroup").hidden = isIncome;
+  $("#expenseCategory").required = !isIncome;
+  $("#incomeHint").hidden = !isIncome;
+  $("#addEntryButton").innerHTML = isIncome
+    ? 'Add money received <span aria-hidden="true">＋</span>'
+    : 'Add expense <span aria-hidden="true">＋</span>';
 }
 
 async function startAuth() {
@@ -722,17 +836,27 @@ async function startAuth() {
     return;
   }
 
-  const { data: sessionData, error } = await supabase.auth.getSession();
-  if (error) setAuthStatus("Could not restore your sign-in. Please sign in again.", "error");
-  if (sessionData?.session?.user) await activateUser(sessionData.session.user);
-
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT") {
       resetSession();
+    } else if (event === "PASSWORD_RECOVERY") {
+      window.setTimeout(showPasswordRecovery, 0);
     } else if (session?.user) {
-      window.setTimeout(() => { void activateUser(session.user); }, 0);
+      window.setTimeout(() => {
+        if (recoveryModeRequested || PASSWORD_RECOVERY_LINK) showPasswordRecovery();
+        else void activateUser(session.user);
+      }, 0);
     }
   });
+
+  const { data: sessionData, error } = await supabase.auth.getSession();
+  if (error) setAuthStatus("Could not restore your sign-in. Please sign in again.", "error");
+  if (sessionData?.session?.user) {
+    if (recoveryModeRequested || PASSWORD_RECOVERY_LINK) showPasswordRecovery();
+    else await activateUser(sessionData.session.user);
+  } else if (PASSWORD_RECOVERY_LINK) {
+    showPasswordRecovery();
+  }
 }
 
 $("#authForm").dataset.mode = "signin";
@@ -743,6 +867,41 @@ $("#authSwitch").addEventListener("click", () => {
   if (!supabase) return;
   $("#authForm").dataset.mode = $("#authForm").dataset.mode === "signin" ? "signup" : "signin";
   updateAuthMode();
+});
+
+$("#entryType").addEventListener("change", updateEntryFormMode);
+updateEntryFormMode();
+
+document.querySelectorAll("[data-password-target]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const input = $("#" + button.dataset.passwordTarget);
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.textContent = show ? "Hide" : "Show";
+    button.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    button.setAttribute("aria-pressed", String(show));
+  });
+});
+
+$("#forgotPasswordButton").addEventListener("click", async () => {
+  const email = $("#authEmail").value.trim();
+  if (!email) {
+    setAuthStatus("Enter your email address first, then choose Forgot password.", "error");
+    $("#authEmail").focus();
+    return;
+  }
+  const button = $("#forgotPasswordButton");
+  button.disabled = true;
+  setAuthStatus("Sending a password-reset email…");
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  button.disabled = false;
+  if (error) {
+    setAuthStatus(error.message || "Could not send the reset email. Please try again.", "error");
+    return;
+  }
+  setAuthStatus("If an account exists for that email, a reset link is on its way. Check your inbox and spam folder.");
 });
 
 $("#authForm").addEventListener("submit", async (event) => {
@@ -787,6 +946,35 @@ $("#authForm").addEventListener("submit", async (event) => {
   }
 });
 
+$("#passwordResetForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const password = $("#newPassword").value;
+  const confirmation = $("#confirmNewPassword").value;
+  if (password.length < 8) {
+    setAuthStatus("Use at least 8 characters for your new password.", "error");
+    return;
+  }
+  if (password !== confirmation) {
+    setAuthStatus("The passwords do not match. Please try again.", "error");
+    $("#confirmNewPassword").focus();
+    return;
+  }
+
+  $("#passwordResetSubmit").disabled = true;
+  setAuthStatus("Updating your password…");
+  const { error } = await supabase.auth.updateUser({ password });
+  $("#passwordResetSubmit").disabled = false;
+  if (error) {
+    setAuthStatus(error.message || "Could not update your password. Request a new reset email and try again.", "error");
+    return;
+  }
+
+  recoveryModeRequested = false;
+  await supabase.auth.signOut();
+  resetSession();
+  setAuthStatus("Password updated. Sign in with your new password.");
+});
+
 $("#signOutButton").addEventListener("click", async () => {
   if (!supabase) return;
   $("#signOutButton").disabled = true;
@@ -807,11 +995,13 @@ $("#expenseForm").addEventListener("submit", (event) => {
     return;
   }
 
+  const income = fields.get("type") === "income";
   const expense = {
     id: createId(),
     name,
     amount,
-    category: String(fields.get("category")),
+    type: income ? "income" : "expense",
+    category: income ? "Income" : String(fields.get("category")),
     dateISO: localDateISO()
   };
   data.expenses.push(expense);
@@ -820,6 +1010,7 @@ $("#expenseForm").addEventListener("submit", (event) => {
   render();
   queueOperation({ type: "upsert-expense", expense });
   event.currentTarget.reset();
+  updateEntryFormMode();
   $("#expenseName").focus();
 });
 
@@ -852,7 +1043,7 @@ $("#cancelBudget").addEventListener("click", () => $("#budgetDialog").close());
 
 $("#clearButton").addEventListener("click", () => {
   const month = $("#monthPicker").value;
-  if (!monthExpenses().length || !window.confirm("Delete all expenses for this month from your account?")) return;
+  if (!monthExpenses().length || !window.confirm("Delete all income and expenses for this month from your account?")) return;
   data.expenses = data.expenses.filter((expense) => !expense.dateISO.startsWith(month));
   saveLocal();
   render();
@@ -863,15 +1054,16 @@ $("#monthPicker").addEventListener("change", render);
 $("#searchInput").addEventListener("input", render);
 
 $("#exportButton").addEventListener("click", () => {
-  const rows = [["Date", "Name", "Category", "Amount (" + data.currency + ")"], ...monthExpenses().map((expense) => [
+  const rows = [["Type", "Date", "Name", "Category", "Amount (" + data.currency + ")"], ...monthExpenses().map((expense) => [
+    isIncome(expense) ? "Income" : "Expense",
     expense.dateISO,
     expense.name,
-    expense.category,
+    isIncome(expense) ? "Money received" : expense.category,
     expense.amount
   ])];
   const csv = rows.map((row) => row.map((cell) => '"' + String(cell).replaceAll('"', '""') + '"').join(",")).join("\r\n");
-    const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
-const link = document.createElement("a");
+  const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
   link.href = url;
   link.download = "smart-spend-" + ($("#monthPicker").value || "expenses") + ".csv";
   link.hidden = true;

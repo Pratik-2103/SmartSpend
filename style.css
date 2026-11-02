@@ -6,14 +6,14 @@
   color: #e8eee9;
   background: #101713;
   font-synthesis: none;
-  --page: #101713;
-  --surface: #18211b;
-  --surface-raised: #1b2820;
-  --green: #45bd80;
+  --page: #0c1511;
+  --surface: #16231b;
+  --surface-raised: #1b2a21;
+  --green: #59d995;
   --green-dark: #319766;
   --green-light: #1c392b;
   --muted: #9aa89f;
-  --line: #29362e;
+  --line: #2b4033;
   --white: #f4f8f5;
   --orange: #f1b56b;
   --red: #ff806d;
@@ -33,8 +33,8 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 8% 0%, #1c3427 0, transparent 30rem),
-    radial-gradient(circle at 100% 28%, #182a22 0, transparent 26rem),
+    radial-gradient(circle at 8% 0%, #1b3929 0, transparent 32rem),
+    radial-gradient(circle at 100% 28%, #19352a 0, transparent 28rem),
     var(--page);
 }
 
@@ -139,7 +139,7 @@ h2 {
 
 .summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 15px;
 }
 
@@ -149,6 +149,14 @@ h2 {
   border-radius: 19px;
   background: linear-gradient(145deg, #1b2820, #17201a);
   box-shadow: var(--shadow);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.panel:hover,
+.summary .card:hover {
+  border-color: #3b5b46;
+  box-shadow: 0 18px 48px #00000032;
+  transform: translateY(-2px);
 }
 
 .summary .card {
@@ -187,6 +195,15 @@ h2 {
 .budget-card {
   border-color: #27855a;
   background: linear-gradient(135deg, #176b45, #124c34 78%);
+}
+
+.income-card {
+  border-color: #2d6043;
+  background: linear-gradient(145deg, #1b3023, #18251d);
+}
+
+.income-card strong {
+  color: #8debb5;
 }
 
 .budget-card .card-label {
@@ -446,6 +463,10 @@ select:focus {
   white-space: nowrap;
 }
 
+.expense-amount.income-amount {
+  color: #80e8a8;
+}
+
 .delete-button {
   width: 29px;
   height: 29px;
@@ -504,6 +525,17 @@ select:focus {
   justify-content: space-between;
   align-items: center;
   margin-top: 21px;
+}
+
+.income-hint {
+  margin: 12px 0 0;
+  padding: 11px 12px;
+  border: 1px solid #2d6043;
+  border-radius: 10px;
+  background: #193323;
+  color: #a9edc4;
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .chart-panel,
@@ -666,8 +698,9 @@ select:focus {
 
 .member-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
   padding: 12px 0;
   border-bottom: 1px solid var(--line);
   color: #e4ece6;
@@ -677,6 +710,56 @@ select:focus {
 .member-row span:last-child {
   color: var(--muted);
   white-space: nowrap;
+}
+
+.member-details {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-details span:first-child {
+  overflow-wrap: anywhere;
+}
+
+.member-details span:last-child {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-status {
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.block-member-button {
+  padding: 7px 10px;
+  border: 1px solid #70413a;
+  border-radius: 8px;
+  background: #39231f;
+  color: #ffad9f;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.block-member-button:hover:not(:disabled) {
+  background: #512d27;
+}
+
+.block-member-button:disabled {
+  border-color: #34443a;
+  background: #202a23;
+  color: #8f9b92;
 }
 
 .sync-status {
@@ -753,9 +836,40 @@ footer {
   margin: 14px 0 7px;
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 68px;
+}
+
+.visibility-button {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #7ce2a5;
+  font-size: 11px;
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+
+.visibility-button:hover {
+  background: #ffffff0c;
+}
+
 .auth-submit {
   width: 100%;
   margin-top: 19px;
+}
+
+.auth-forgot {
+  display: block;
+  margin: 14px 0 0 auto;
 }
 
 .consent-row {
@@ -901,17 +1015,18 @@ dialog form label {
   }
 
   .summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
   }
 
   .summary .card {
-    min-height: 128px;
-    padding: 18px;
+    min-height: 135px;
+    padding: 15px;
   }
 
   .summary strong {
-    font-size: 24px;
+    font-size: clamp(18px, 5vw, 24px);
+    overflow-wrap: anywhere;
   }
 
   .content-grid {
@@ -943,6 +1058,10 @@ dialog form label {
 
   .auth-card {
     padding: 26px 22px;
+  }
+
+  .member-row {
+    align-items: flex-start;
   }
 }
 

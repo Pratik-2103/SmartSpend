@@ -26,17 +26,35 @@
         <label for="authEmail">Email address</label>
         <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required />
         <label for="authPassword">Password</label>
-        <input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required />
+        <div class="password-field">
+          <input id="authPassword" type="password" autocomplete="current-password" minlength="8" placeholder="At least 8 characters" required />
+          <button class="visibility-button" type="button" data-password-target="authPassword" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
         <label class="consent-row" id="consentRow" hidden>
           <input id="privacyConsent" type="checkbox" />
           <span>I agree that my email and expenses will be stored in the cloud so I can use Smart Spend across devices. The site owner can see my registered email; my expenses are private to my account.</span>
         </label>
         <button class="primary-button auth-submit" id="authSubmit" type="submit">Sign in</button>
+        <button class="text-button auth-forgot" id="forgotPasswordButton" type="button">Forgot password?</button>
+      </form>
+
+      <form id="passwordResetForm" hidden>
+        <label for="newPassword">New password</label>
+        <div class="password-field">
+          <input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters" required />
+          <button class="visibility-button" type="button" data-password-target="newPassword" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
+        <label for="confirmNewPassword">Confirm new password</label>
+        <div class="password-field">
+          <input id="confirmNewPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Type it again" required />
+          <button class="visibility-button" type="button" data-password-target="confirmNewPassword" aria-label="Show password" aria-pressed="false">Show</button>
+        </div>
+        <button class="primary-button auth-submit" id="passwordResetSubmit" type="submit">Update password</button>
       </form>
 
       <p class="setup-notice" id="authSetupNotice" hidden></p>
       <p class="auth-status" id="authStatus" role="status" aria-live="polite"></p>
-      <p class="auth-switch">
+      <p class="auth-switch" id="authSwitchRow">
         <span id="authSwitchPrompt">New to Smart Spend?</span>
         <button id="authSwitch" type="button">Create an account</button>
       </p>
@@ -61,11 +79,16 @@
       </div>
     </header>
 
-    <section class="summary" aria-label="Monthly spending summary">
+    <section class="summary" aria-label="Monthly money summary">
       <article class="card budget-card">
         <div class="card-label"><span class="summary-icon">🎯</span><span>Monthly budget</span></div>
         <strong id="budgetDisplay">₹0</strong>
         <button class="text-button" id="editBudgetButton" type="button">Set budget <span aria-hidden="true">↗</span></button>
+      </article>
+      <article class="card income-card">
+        <div class="card-label"><span class="summary-icon">💸</span><span>Money received</span></div>
+        <strong id="totalIncome">₹0</strong>
+        <span class="muted">For the selected month</span>
       </article>
       <article class="card">
         <div class="card-label"><span class="summary-icon">📊</span><span>Total spent</span></div>
@@ -73,9 +96,9 @@
         <span class="muted">For the selected month</span>
       </article>
       <article class="card">
-        <div class="card-label"><span class="summary-icon">🌱</span><span>Remaining</span></div>
-        <strong id="remaining">₹0</strong>
-        <span class="muted">Budget left</span>
+        <div class="card-label"><span class="summary-icon">🌱</span><span>Available</span></div>
+        <strong id="availableFunds">₹0</strong>
+        <span class="muted">Budget + received − spent</span>
       </article>
     </section>
 
@@ -104,7 +127,7 @@
         </select>
       </label>
       <button class="secondary-button export-button" id="exportButton" type="button">↓ Export CSV</button>
-      <p class="currency-note" id="currencyNote">Choose the currency for this account. It locks after your first expense to keep totals accurate.</p>
+      <p class="currency-note" id="currencyNote">Choose the currency for this account. It locks after your first entry to keep totals accurate.</p>
     </section>
 
     <section class="content-grid">
@@ -112,19 +135,25 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">YOUR ACTIVITY</p>
-            <h2>Recent expenses</h2>
+            <h2>Recent activity</h2>
           </div>
-          <button class="clear-button" id="clearButton" type="button">Clear month</button>
+          <button class="clear-button" id="clearButton" type="button">Clear activity</button>
         </div>
         <ul class="expense-list" id="expenseList" aria-live="polite"></ul>
-        <p class="empty-state" id="emptyState">No expenses this month. Add your first one.</p>
+        <p class="empty-state" id="emptyState">No activity this month. Add your first entry.</p>
       </section>
 
       <section class="panel add-panel">
         <p class="eyebrow">KEEP TRACK</p>
-        <h2>Add an expense</h2>
+        <h2 id="entryHeading">Add an expense</h2>
         <form id="expenseForm">
-          <label for="expenseName">What did you spend on?</label>
+          <label for="entryType">What are you adding?</label>
+          <select id="entryType" name="type">
+            <option value="expense">Expense</option>
+            <option value="income">Money received</option>
+          </select>
+
+          <label for="expenseName" id="entryNameLabel">What did you spend on?</label>
           <input id="expenseName" name="name" type="text" placeholder="e.g. Weekly groceries" maxlength="60" required />
 
           <label for="expenseAmount">Amount</label>
@@ -133,8 +162,9 @@
             <input id="expenseAmount" name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required />
           </div>
 
-          <label for="expenseCategory">Category</label>
-          <select id="expenseCategory" name="category">
+          <div id="expenseCategoryGroup">
+            <label for="expenseCategory">Category</label>
+            <select id="expenseCategory" name="category">
             <option value="Food">🍽️ Food</option>
             <option value="Transport">🚗 Transport</option>
             <option value="Shopping">🛍️ Shopping</option>
@@ -147,10 +177,14 @@
             <option value="Subscriptions">🔁 Subscriptions</option>
             <option value="Entertainment">🎬 Entertainment</option>
             <option value="Gifts">🎁 Gifts</option>
+            <option value="Investment">📈 Investment</option>
             <option value="Other">💳 Other</option>
-          </select>
+            </select>
+          </div>
 
-          <button class="primary-button add-expense-button" type="submit">Add expense <span aria-hidden="true">＋</span></button>
+          <p class="income-hint" id="incomeHint" hidden>Record money someone sent you, a refund, or other income. It adds to the amount available this month.</p>
+
+          <button class="primary-button add-expense-button" id="addEntryButton" type="submit">Add expense <span aria-hidden="true">＋</span></button>
         </form>
       </section>
 
@@ -195,7 +229,7 @@
           </div>
           <span class="chart-badge" id="memberCount">0 members</span>
         </div>
-        <p class="owner-message" id="ownerMessage">Only registered email and join date appear here.</p>
+        <p class="owner-message" id="ownerMessage">Registered emails and join dates appear here. You can block access for an account.</p>
         <ul class="member-list" id="memberList"></ul>
       </section>
     </section>
